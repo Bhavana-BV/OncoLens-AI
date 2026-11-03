@@ -1,0 +1,12 @@
+metric,best_model,best_value
+accuracy,ResNet50,0.9107692307692308
+precision,ResNet50,0.8802083333333334
+sensitivity_recall,ResNet50,0.9657142857142856
+specificity,ResNet50,0.8466666666666667
+f1_score,ResNet50,0.9209809264305178
+roc_auc,ResNet50,0.9706666666666666
+pr_auc_average_precision,ResNet50,0.9731912086016646
+balanced_accuracy,ResNet50,0.9061904761904762
+matthews_correlation_coefficient,ResNet50,0.8236599537175027
+brier_score,ResNet50,0.0683283203147846
+log_loss,ResNet50,0.2232546094284183

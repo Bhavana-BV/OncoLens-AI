@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="OncoLens academic research prototype for oral-image classification.">
+  <title>{% block title %}OncoLens | AI Research{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/"><span class="brand-mark">O</span><span>Onco<span class="accent">Lens</span><small>AI RESEARCH PROJECT</small></span></a>
+  <nav>
+    <a href="/">Overview</a><a href="/research">Research</a><a href="/demo" class="nav-cta">Interactive demo</a>
+  </nav>
+</header>
+<main>{% block content %}{% endblock %}</main>
+<footer class="footer">
+  <div><strong>OncoLens</strong><span>Research prototype · Academic project</span></div>
+  <p>Not clinically validated. Not for medical diagnosis or treatment decisions.</p>
+</footer>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

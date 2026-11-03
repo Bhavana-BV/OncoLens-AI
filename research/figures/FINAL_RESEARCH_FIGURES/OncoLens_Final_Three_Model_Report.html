@@ -1,0 +1,110 @@
+
+<html>
+<head>
+<meta charset="utf-8">
+<title>OncoLens Final Results</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 28px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+th { background: #e8eef7; }
+img { max-width: 100%; }
+</style>
+</head>
+<body>
+<h1>OncoLens: Three-Model Test Results</h1>
+<p>Positive class: Cancer. Negative class: Non-cancer.</p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>test_images</th>
+      <th>accuracy</th>
+      <th>precision</th>
+      <th>sensitivity_recall</th>
+      <th>specificity</th>
+      <th>f1_score</th>
+      <th>balanced_accuracy</th>
+      <th>mcc</th>
+      <th>roc_auc</th>
+      <th>pr_auc_average_precision</th>
+      <th>brier_score</th>
+      <th>log_loss</th>
+      <th>tn</th>
+      <th>fp</th>
+      <th>fn</th>
+      <th>tp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>MobileNetV2</td>
+      <td>325</td>
+      <td>0.9046</td>
+      <td>0.9045</td>
+      <td>0.9200</td>
+      <td>0.8867</td>
+      <td>0.9122</td>
+      <td>0.9033</td>
+      <td>0.8080</td>
+      <td>0.9596</td>
+      <td>0.9629</td>
+      <td>0.0744</td>
+      <td>0.2587</td>
+      <td>133</td>
+      <td>17</td>
+      <td>14</td>
+      <td>161</td>
+    </tr>
+    <tr>
+      <td>EfficientNetB0</td>
+      <td>325</td>
+      <td>0.8769</td>
+      <td>0.8771</td>
+      <td>0.8971</td>
+      <td>0.8533</td>
+      <td>0.8870</td>
+      <td>0.8752</td>
+      <td>0.7521</td>
+      <td>0.9665</td>
+      <td>0.9707</td>
+      <td>0.0803</td>
+      <td>0.2572</td>
+      <td>128</td>
+      <td>22</td>
+      <td>18</td>
+      <td>157</td>
+    </tr>
+    <tr>
+      <td>ResNet50</td>
+      <td>325</td>
+      <td>0.9108</td>
+      <td>0.8802</td>
+      <td>0.9657</td>
+      <td>0.8467</td>
+      <td>0.9210</td>
+      <td>0.9062</td>
+      <td>0.8237</td>
+      <td>0.9707</td>
+      <td>0.9732</td>
+      <td>0.0683</td>
+      <td>0.2233</td>
+      <td>127</td>
+      <td>23</td>
+      <td>6</td>
+      <td>169</td>
+    </tr>
+  </tbody>
+</table>
+<h2>ROC Curves</h2>
+<img src="figures/three_model_roc_curves.png">
+<h2>Precision–Recall Curves</h2>
+<img src="figures/three_model_precision_recall_curves.png">
+<h2>Confusion Matrices</h2>
+<img src="figures/three_model_confusion_matrices.png">
+<h2>Performance Comparison</h2>
+<img src="figures/three_model_performance_comparison.png">
+<p><b>Limitation:</b> Research results only; not validated for clinical diagnosis.
+Differences in preprocessing and training configuration should be considered.</p>
+</body>
+</html>

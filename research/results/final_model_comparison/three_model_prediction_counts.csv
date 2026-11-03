@@ -1,0 +1,5 @@
+,MobileNetV2,EfficientNetB0,ResNet50
+True positives,161,157,169
+False negatives,14,18,6
+True negatives,133,128,127
+False positives,17,22,23

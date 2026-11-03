@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Research | OncoLens{% endblock %}
+{% block content %}
+<section class="page-hero wrap"><div class="eyebrow">01 — RESEARCH OVERVIEW</div><h1>From dataset audit<br>to model evaluation.</h1><p>A summary of the experimental workflow and reported held-out test results.</p></section>
+<section class="wrap section">
+  <div class="section-heading"><div><div class="eyebrow">EXPERIMENTAL WORKFLOW</div><h2>Methodology</h2></div><p>The pipeline is designed to examine model performance while reducing duplicate-related data leakage and documenting model behaviour beyond accuracy.</p></div>
+  <div class="timeline">
+    <div><b>01</b><section><h3>Dataset audit & grouping</h3><p>Image metadata and duplicate/near-duplicate relationships were examined. Related images were grouped to support leakage-controlled splitting.</p></section></div>
+    <div><b>02</b><section><h3>Preprocessing experiments</h3><p>Raw images and alternative enhancement approaches were compared, including CLAHE, histogram equalization, blur, sharpening and adaptive methods.</p></section></div>
+    <div><b>03</b><section><h3>Deep-learning models</h3><p>MobileNetV2, EfficientNetB0 and ResNet50 were trained and evaluated. Group-aware five-fold cross-validation was performed on development data.</p></section></div>
+    <div><b>04</b><section><h3>Evaluation & explainability</h3><p>Held-out test metrics, Grad-CAM visualizations, Monte Carlo Dropout uncertainty estimates and TensorFlow Lite conversion were examined.</p></section></div>
+  </div>
+</section>
+<section class="section dark-section"><div class="wrap">
+  <div class="eyebrow">02 — HELD-OUT TEST SET</div><h2>Model performance</h2><p class="muted">Reported results on 325 eligible test images. These figures are experimental and are not evidence of clinical validity.</p>
+  <div class="table-wrap"><table><thead><tr><th>Metric</th><th>MobileNetV2</th><th>EfficientNetB0</th><th>ResNet50</th></tr></thead><tbody>
+  <tr><td>Accuracy</td><td>90.46%</td><td>87.69%</td><td>91.08%</td></tr>
+  <tr><td>Precision</td><td>90.45%</td><td>87.71%</td><td>88.02%</td></tr>
+  <tr><td>Sensitivity / Recall</td><td>92.00%</td><td>89.71%</td><td>96.57%</td></tr>
+  <tr><td>Specificity</td><td>88.67%</td><td>85.33%</td><td>84.67%</td></tr>
+  <tr><td>F1-score</td><td>91.22%</td><td>88.70%</td><td>92.10%</td></tr>
+  <tr><td>ROC-AUC</td><td>0.9596</td><td>0.9665</td><td>0.9707</td></tr>
+  <tr><td>PR-AUC</td><td>0.9629</td><td>0.9707</td><td>0.9732</td></tr>
+  </tbody></table></div>
+  <p class="table-note">Metrics are reproduced from the project's reported experiment outputs. Verify against the original prediction files before publication or formal submission.</p>
+</div></section>
+<section class="wrap section">
+  <div class="section-heading"><div><div class="eyebrow">03 — ADDITIONAL ANALYSIS</div><h2>Beyond classification.</h2></div><p>Additional experiments help characterize model behaviour, but do not establish clinical reliability.</p></div>
+  <div class="feature-grid">
+    <article class="feature-card"><span class="feature-number">EXPLAINABILITY</span><h3>Grad-CAM</h3><p>Class-activation heatmaps and overlays were generated for selected eligible test images.</p></article>
+    <article class="feature-card"><span class="feature-number">UNCERTAINTY</span><h3>Monte Carlo Dropout</h3><p>Repeated stochastic forward passes were used to estimate predictive variability and calibration-related summaries.</p></article>
+    <article class="feature-card"><span class="feature-number">DEPLOYMENT</span><h3>TensorFlow Lite</h3><p>Float16 models were benchmarked for model size, inference latency and agreement with Keras outputs.</p></article>
+  </div>
+</section>
+{% endblock %}

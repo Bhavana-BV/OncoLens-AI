@@ -1,0 +1,14 @@
+{
+    "project": "OncoLens",
+    "project_title": "Leakage-Controlled, Uncertainty-Aware Oral Cancer Detection: MobileNetV2 vs EfficientNetB0",
+    "created_at": "2026-10-22T23:45:34",
+    "source_files_copied": 2,
+    "consolidated_result_files_copied": 54,
+    "figures_copied": 44,
+    "models_included": false,
+    "model_files_copied": 0,
+    "original_project_modified": false,
+    "dataset_copied": false,
+    "retraining_performed": false,
+    "submission_directory": "C:\\Users\\Bhavana BV\\Downloads\\OncoLens\\OncoLens_Final_Submission"
+}

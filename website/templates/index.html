@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}OncoLens | Oral Image AI Research{% endblock %}
+{% block content %}
+<section class="hero wrap">
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="pulse"></span> COMPUTER VISION · RESEARCH PROTOTYPE</div>
+    <h1>Exploring AI for<br><span class="gradient-text">oral image analysis.</span></h1>
+    <p class="hero-lead">OncoLens investigates deep-learning approaches to oral-image classification, with an emphasis on leakage-controlled evaluation, model comparison and uncertainty-aware analysis.</p>
+    <div class="hero-actions"><a class="button primary" href="/research">Explore the research <span>↗</span></a><a class="button secondary" href="/demo">View interactive demo</a></div>
+    <div class="hero-note">Academic research demonstration · Not a diagnostic product</div>
+  </div>
+  <div class="hero-visual">
+    <div class="visual-orbit orbit-one"></div><div class="visual-orbit orbit-two"></div>
+    <div class="scan-card">
+      <div class="scan-top"><span>ONCOLENS / ANALYSIS</span><span class="live-dot">● DEMO</span></div>
+      <div class="scan-art"><div class="scan-ring"></div><div class="scan-core">O</div><div class="scan-cross cross-a"></div><div class="scan-cross cross-b"></div></div>
+      <div class="scan-bottom"><span>Computer vision pipeline</span><span class="scan-tag">224 × 224</span></div>
+    </div>
+    <div class="float-chip chip-a">01 <span>Leakage control</span></div><div class="float-chip chip-b">02 <span>Explainable AI</span></div>
+  </div>
+</section>
+<section class="wrap stats-grid">
+  <div class="stat"><strong>3</strong><span>Deep-learning backbones studied</span></div>
+  <div class="stat"><strong>5-fold</strong><span>Group-aware cross-validation</span></div>
+  <div class="stat"><strong>Grad-CAM</strong><span>Visual explanation analysis</span></div>
+  <div class="stat"><strong>MC Dropout</strong><span>Uncertainty estimation</span></div>
+</section>
+<section class="section wrap">
+  <div class="section-heading"><div><div class="eyebrow">THE PROJECT</div><h2>Research with evaluation<br>at its core.</h2></div><p>Beyond a single accuracy score, the project examines duplicate-aware data splitting, class-wise performance, calibration, visual explanations and lightweight deployment.</p></div>
+  <div class="feature-grid">
+    <article class="feature-card"><span class="feature-number">01 / DATA</span><h3>Leakage-aware dataset</h3><p>Duplicate and near-duplicate grouping is considered before separating development and held-out test data.</p></article>
+    <article class="feature-card"><span class="feature-number">02 / MODELS</span><h3>Model comparison</h3><p>MobileNetV2, EfficientNetB0 and ResNet50 are investigated using a consistent research evaluation framework.</p></article>
+    <article class="feature-card"><span class="feature-number">03 / TRUST</span><h3>Interpretability & uncertainty</h3><p>Grad-CAM and Monte Carlo Dropout provide additional views of model behaviour and predictive uncertainty.</p></article>
+  </div>
+</section>
+<section class="cta-band wrap"><div><div class="eyebrow">DISCOVER THE WORK</div><h2>See the methodology<br>behind the metrics.</h2></div><a class="button primary" href="/research">Explore research ↗</a></section>
+{% endblock %}
