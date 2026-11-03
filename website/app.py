@@ -6,6 +6,8 @@ import numpy as np
 import tensorflow as tf
 import cv2
 import time
+import gc
+import threading
 
 from tensorflow.keras.models import Model
 from tensorflow.keras.applications.resnet50 import preprocess_input
@@ -17,14 +19,12 @@ from tensorflow.keras.applications.resnet50 import preprocess_input
 
 app = Flask(__name__)
 
-# Automatically locate the OncoLens_GitHub repository root
 ROOT = Path(__file__).resolve().parent.parent
 
 app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
-# All trained models are stored in the repository's models folder
 MODEL_PATHS = {
     "MobileNetV2": ROOT / "models" / "mobilenetv2_sharpen.keras",
     "EfficientNetB0": ROOT / "models" / "efficientnetb0_sharpen.keras",
@@ -49,11 +49,30 @@ GRADCAM_CONFIG = {
 GRADCAM_DIR = Path(app.static_folder) / "gradcam"
 GRADCAM_DIR.mkdir(parents=True, exist_ok=True)
 
-loaded_models = {}
+# Do not cache models.
+# Only one inference operation is allowed at a time.
+inference_lock = threading.Lock()
 
-# Temporary storage for uploaded images.
-# Suitable for local demonstration; not persistent.
+# Temporary uploaded-image storage.
 image_sessions = {}
+
+MAX_IMAGE_SESSIONS = 5
+
+
+# ============================================================
+# MEMORY CLEANUP
+# ============================================================
+
+def cleanup_tensorflow():
+
+    gc.collect()
+
+    try:
+        tf.keras.backend.clear_session()
+    except Exception as error:
+        print("TensorFlow cleanup warning:", error)
+
+    gc.collect()
 
 
 # ============================================================
@@ -61,6 +80,7 @@ image_sessions = {}
 # ============================================================
 
 def allowed_file(filename):
+
     return (
         "." in filename
         and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -166,9 +186,6 @@ def preprocess_gradcam_input(image, model_name):
 
 def load_selected_model(model_name):
 
-    if model_name in loaded_models:
-        return loaded_models[model_name]
-
     if model_name not in MODEL_PATHS:
         raise ValueError("Unknown model.")
 
@@ -200,8 +217,6 @@ def load_selected_model(model_name):
             compile=False
         )
 
-    loaded_models[model_name] = model
-
     print(
         f"{model_name} loaded in "
         f"{time.time() - start:.2f} seconds."
@@ -216,63 +231,77 @@ def load_selected_model(model_name):
 
 def predict_image(image, model_name):
 
-    model = load_selected_model(model_name)
+    model = None
+    input_tensor = None
+    output = None
 
-    if model_name == "ResNet50":
+    try:
 
-        input_tensor = preprocess_resnet_image(image)
+        model = load_selected_model(model_name)
 
-        output = model.predict(
-            input_tensor,
-            verbose=0
-        )
+        if model_name == "ResNet50":
+
+            input_tensor = preprocess_resnet_image(image)
+
+            output = model.predict(
+                input_tensor,
+                verbose=0
+            )
+
+            cancer_probability = float(
+                np.asarray(output).reshape(-1)[0]
+            )
+
+        else:
+
+            input_tensor = preprocess_sharpened_image(image)
+
+            output = model.predict(
+                input_tensor,
+                verbose=0
+            )
+
+            cancer_probability = float(output[0][1])
 
         cancer_probability = float(
-            np.asarray(output).reshape(-1)[0]
+            np.clip(cancer_probability, 0, 1)
         )
 
-    else:
+        non_cancer_probability = 1 - cancer_probability
 
-        input_tensor = preprocess_sharpened_image(image)
-
-        output = model.predict(
-            input_tensor,
-            verbose=0
+        prediction = (
+            "Cancer"
+            if cancer_probability >= 0.5
+            else "Non-Cancer"
         )
 
-        cancer_probability = float(output[0][1])
+        confidence = max(
+            cancer_probability,
+            non_cancer_probability
+        )
 
-    cancer_probability = float(
-        np.clip(cancer_probability, 0, 1)
-    )
+        return {
+            "model": model_name,
+            "prediction": prediction,
+            "cancer_probability": round(
+                cancer_probability * 100, 2
+            ),
+            "non_cancer_probability": round(
+                non_cancer_probability * 100, 2
+            ),
+            "confidence": round(
+                confidence * 100, 2
+            ),
+            "threshold": 0.5
+        }
 
-    non_cancer_probability = 1 - cancer_probability
+    finally:
 
-    prediction = (
-        "Cancer"
-        if cancer_probability >= 0.5
-        else "Non-Cancer"
-    )
+        del output
+        del input_tensor
+        del model
 
-    confidence = max(
-        cancer_probability,
-        non_cancer_probability
-    )
-
-    return {
-        "model": model_name,
-        "prediction": prediction,
-        "cancer_probability": round(
-            cancer_probability * 100, 2
-        ),
-        "non_cancer_probability": round(
-            non_cancer_probability * 100, 2
-        ),
-        "confidence": round(
-            confidence * 100, 2
-        ),
-        "threshold": 0.5
-    }
+        cleanup_tensorflow()
 
 
 # ============================================================
@@ -480,58 +509,80 @@ def create_gradcam_overlay(image, heatmap):
 
 def generate_model_gradcam(image, model_name, session_id):
 
-    model = load_selected_model(model_name)
+    model = None
+    input_tensor = None
+    backbone = None
+    target_layer = None
+    heatmap = None
+    overlay = None
 
-    config = GRADCAM_CONFIG[model_name]
+    try:
 
-    backbone = find_layer_recursive(
-        model,
-        config["backbone"]
-    )
+        model = load_selected_model(model_name)
 
-    if backbone is None:
-        raise ValueError("Backbone not found.")
+        config = GRADCAM_CONFIG[model_name]
 
-    target_layer = find_layer_recursive(
-        backbone,
-        config["target_layer"]
-    )
+        backbone = find_layer_recursive(
+            model,
+            config["backbone"]
+        )
 
-    if target_layer is None:
-        raise ValueError("Grad-CAM layer not found.")
+        if backbone is None:
+            raise ValueError("Backbone not found.")
 
-    input_tensor = preprocess_gradcam_input(
-        image,
-        model_name
-    )
+        target_layer = find_layer_recursive(
+            backbone,
+            config["target_layer"]
+        )
 
-    heatmap = generate_gradcam(
-        model,
-        backbone,
-        target_layer,
-        input_tensor,
-        model_name
-    )
+        if target_layer is None:
+            raise ValueError("Grad-CAM layer not found.")
 
-    overlay = create_gradcam_overlay(
-        image,
-        heatmap
-    )
+        input_tensor = preprocess_gradcam_input(
+            image,
+            model_name
+        )
 
-    filename = f"{session_id}_{model_name}.jpg"
+        heatmap = generate_gradcam(
+            model,
+            backbone,
+            target_layer,
+            input_tensor,
+            model_name
+        )
 
-    output_path = GRADCAM_DIR / filename
+        overlay = create_gradcam_overlay(
+            image,
+            heatmap
+        )
 
-    overlay.save(
-        output_path,
-        quality=95
-    )
+        filename = f"{session_id}_{model_name}.jpg"
 
-    return {
-        "model": model_name,
-        "image_url": f"/static/gradcam/{filename}",
-        "gradcam_note": "Experimental feature-attribution visualization."
-    }
+        output_path = GRADCAM_DIR / filename
+
+        overlay.save(
+            output_path,
+            quality=95
+        )
+
+        return {
+            "model": model_name,
+            "image_url": f"/static/gradcam/{filename}",
+            "gradcam_note": (
+                "Experimental feature-attribution visualization."
+            )
+        }
+
+    finally:
+
+        del heatmap
+        del input_tensor
+        del target_layer
+        del backbone
+        del model
+        del overlay
+
+        cleanup_tensorflow()
 
 
 # ============================================================
@@ -555,7 +606,6 @@ def demo():
 
 # ============================================================
 # THREE-MODEL PREDICTION API
-# GRAD-CAM IS NOT RUN HERE
 # ============================================================
 
 @app.route("/api/compare", methods=["POST"])
@@ -583,7 +633,11 @@ def api_compare():
 
         session_id = uuid4().hex
 
-        # Store the uploaded image for separate Grad-CAM requests.
+        # Limit temporary image sessions.
+        while len(image_sessions) >= MAX_IMAGE_SESSIONS:
+            oldest_session = next(iter(image_sessions))
+            image_sessions.pop(oldest_session)
+
         image_sessions[session_id] = image.copy()
 
         results = []
@@ -594,23 +648,25 @@ def api_compare():
             "ResNet50"
         ]
 
-        for model_name in model_names:
+        with inference_lock:
 
-            print(f"\nPredicting with {model_name}...")
+            for model_name in model_names:
 
-            start = time.time()
+                print(f"\nPredicting with {model_name}...")
 
-            result = predict_image(
-                image,
-                model_name
-            )
+                start = time.time()
 
-            results.append(result)
+                result = predict_image(
+                    image,
+                    model_name
+                )
 
-            print(
-                f"{model_name} prediction completed in "
-                f"{time.time() - start:.2f} seconds."
-            )
+                results.append(result)
+
+                print(
+                    f"{model_name} prediction completed in "
+                    f"{time.time() - start:.2f} seconds."
+                )
 
         comparison = compare_predictions(results)
 
@@ -639,7 +695,6 @@ def api_compare():
 
 # ============================================================
 # SEPARATE GRAD-CAM API
-# ONE MODEL PER REQUEST
 # ============================================================
 
 @app.route("/api/gradcam", methods=["POST"])
@@ -651,7 +706,9 @@ def api_gradcam():
     model_name = data.get("model")
 
     if not session_id or session_id not in image_sessions:
-        return jsonify({"error": "Image session expired. Upload again."}), 400
+        return jsonify({
+            "error": "Image session expired. Upload again."
+        }), 400
 
     if model_name not in GRADCAM_CONFIG:
         return jsonify({"error": "Invalid model."}), 400
@@ -662,11 +719,13 @@ def api_gradcam():
 
         start = time.time()
 
-        result = generate_model_gradcam(
-            image_sessions[session_id],
-            model_name,
-            session_id
-        )
+        with inference_lock:
+
+            result = generate_model_gradcam(
+                image_sessions[session_id],
+                model_name,
+                session_id
+            )
 
         print(
             f"{model_name} Grad-CAM completed in "
@@ -721,7 +780,12 @@ def api_predict():
         if not valid:
             return jsonify({"error": message}), 400
 
-        result = predict_image(image, model_name)
+        with inference_lock:
+
+            result = predict_image(
+                image,
+                model_name
+            )
 
         return jsonify({
             "success": True,
@@ -747,5 +811,5 @@ if __name__ == "__main__":
         host="127.0.0.1",
         port=5000,
         debug=False,
-        threaded=True
+        threaded=False
     )
